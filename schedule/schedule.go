@@ -5,6 +5,7 @@ import (
 
 	"github.com/go-ini/ini"
 	"github.com/mcbernie/t3-scheduler/typo3"
+	"github.com/mcbernie/t3-scheduler/typo3/forum"
 )
 
 type databaseConfiguration struct {
@@ -48,4 +49,10 @@ func (s *Schedule) Run() (int, error) {
 
 	notifications := s.compare()
 	return notifications, fmt.Errorf("send %d notifications for %d pages", notifications, len(s.watches))
+}
+
+//ForumCheck Checkts Typo3 Forum for lastpost errors
+func (s *Schedule) ForumCheck() {
+	f := forum.Create(s.cfgTypo3.DatabaseConfiguration.String())
+	f.Run()
 }

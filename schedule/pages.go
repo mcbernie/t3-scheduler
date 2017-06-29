@@ -16,6 +16,8 @@ type pageResults struct {
 	lastchange         int64
 	lastchangeDatetime time.Time
 	content            []pageContent
+	hidden             bool
+	deleted            bool
 }
 type pageContent struct {
 	uid            int
@@ -49,12 +51,12 @@ func (s *Schedule) getPage(uid int) pageResults {
 	page := pageResults{}
 	s.databaseOperation(func(d *sql.DB) interface{} {
 
-		rows, err := d.Query("select uid, tstamp, title, SYS_LASTCHANGED from pages where uid = ?", uid)
+		rows, err := d.Query("select uid, tstamp, title, SYS_LASTCHANGED, hidden from pages where uid = ? and deleted = 0", uid)
 		if err != nil {
 			panic(err.Error())
 		}
 		for rows.Next() {
-			if err := rows.Scan(&page.uid, &page.tstamp, &page.title, &page.lastchange); err != nil {
+			if err := rows.Scan(&page.uid, &page.tstamp, &page.title, &page.lastchange, &page.hidden); err != nil {
 				log.Fatal(err)
 			}
 
@@ -66,13 +68,17 @@ func (s *Schedule) getPage(uid int) pageResults {
 		return true
 	})
 
+	if page.uid < 1 {
+		page.deleted = true
+	}
+
 	return page
 }
 
 func (s *Schedule) getContent(page *pageResults) {
 	s.databaseOperation(func(d *sql.DB) interface{} {
 
-		rows, err := d.Query("select uid, tstamp, crdate, bodytext from tt_content where pid = ?", page.uid)
+		rows, err := d.Query("select uid, tstamp, crdate, bodytext from tt_content where pid = ? and hidden = 0 and deleted = 0", page.uid)
 		if err != nil {
 			panic(err.Error())
 		}

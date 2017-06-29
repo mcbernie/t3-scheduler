@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 
@@ -45,11 +46,19 @@ func main() {
 		return
 	}
 
+	f, err := os.OpenFile("loggin.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	if err != nil {
+		log.Fatalf("error opening file: %v", err)
+	}
+	defer f.Close()
+	log.SetOutput(f)
+
 	s := schedule.Create(cfg, t3Path, fileadminPath)
 	_, myerr := s.Run()
 	if myerr != nil {
-		fmt.Println(myerr.Error())
+		log.Println(myerr.Error())
 	}
 
-	//fmt.Printf("nummer: %d", number)
+	s.ForumCheck()
+
 }

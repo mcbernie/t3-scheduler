@@ -8,6 +8,10 @@ import (
 )
 
 func (w *watch) changed() bool {
+	if w.hidden == true || w.pageDeleted == true {
+		return false
+	}
+
 	if w.newWatch == true {
 		return false
 	}
@@ -36,6 +40,9 @@ func (s *Schedule) generateNewlastHashes() {
 	configurationFile := filepath.Join(s.fileadminPath, "lastHashes.ini")
 	cfg := ini.Empty()
 	for _, w := range s.watches {
+		if w.hidden == true || w.pageDeleted == true {
+			continue
+		}
 		section, err := cfg.NewSection(fmt.Sprintf("%d", w.pageID))
 		if err != nil {
 			panic("Error creating section!")

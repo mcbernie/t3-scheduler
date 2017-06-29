@@ -1,6 +1,7 @@
 package schedule
 
 import (
+	"bytes"
 	"crypto/tls"
 	"fmt"
 	"log"
@@ -38,6 +39,7 @@ func createMail(u *feuser, p *watch, s *Schedule) mailing {
 	body := bodyTemplate
 	body = strings.Replace(body, "%user%", u.username, -1)
 	body = strings.Replace(body, "%pagename%", p.title, -1)
+	//body = strings.Replace(body, "%pagelink%", p.title, -1)
 	body = strings.Replace(body, "\\n", "\n", -1)
 
 	return mailing{
@@ -79,6 +81,7 @@ func (s *Schedule) sendMail(p *watch) {
 		}
 	} else if mailConfig.Transport == "smtp" {
 		host, _, _ := net.SplitHostPort(mailConfig.TransportSMTPServer)
+
 		auth := smtp.PlainAuth("", mailConfig.TransportSMTPUsername, mailConfig.TransportSMTPPassword, host)
 
 		tlsconfig := &tls.Config{
@@ -151,10 +154,34 @@ func (s *Schedule) sendMail(p *watch) {
 
 				c.Quit()
 			} else {
-				err := smtp.SendMail(mailConfig.TransportSMTPServer, auth, host, to, msg)
-				if err != nil {
-					log.Fatalf("Error on Sending mail: %s", err.Error())
+				if mailConfig.TransportSMTPUsername == "" {
+					c, err := smtp.Dial(mailConfig.TransportSMTPServer)
+					if err != nil {
+						log.Fatalf("Error on connect to SMTP Server (%s): %s", mailConfig.TransportSMTPServer, err.Error())
+					}
+
+					defer c.Close()
+
+					c.Mail(mailConfig.FromMailAddress)
+					c.Rcpt(u.mail)
+
+					wc, err := c.Data()
+					if err != nil {
+						log.Fatalf("Error open Stream to SMTP Server (%s): %s", mailConfig.TransportSMTPServer, err.Error())
+					}
+					defer wc.Close()
+					buf := bytes.NewBuffer(msg)
+					if _, err = buf.WriteTo(wc); err != nil {
+						log.Fatalf("Error write Stream to SMTP Server (%s): %s", mailConfig.TransportSMTPServer, err.Error())
+					}
+
+				} else {
+					err := smtp.SendMail(mailConfig.TransportSMTPServer, auth, host, to, msg)
+					if err != nil {
+						log.Fatalf("Error on Sending mail: %s", err.Error())
+					}
 				}
+
 			}
 
 		}

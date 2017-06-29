@@ -25,6 +25,8 @@ type watch struct {
 	currentHash uint32
 	lastHash    uint32
 	newWatch    bool
+	hidden      bool
+	pageDeleted bool
 }
 
 func (w *watch) String() string {
@@ -121,12 +123,16 @@ func (s *Schedule) loadConfiguration() {
 		usernames := strings.Split(receiver, ",")
 		for _, username := range usernames {
 			user := s.getUserFromUsername(username)
-			w.users = append(w.users, user)
+			if user.mail != "" {
+				w.users = append(w.users, user)
+			}
 		}
 
 		dbPage := s.getPage(pid)
 		w.title = dbPage.title
 		w.currentHash = dbPage.Hash()
+		w.hidden = dbPage.hidden
+		w.pageDeleted = dbPage.deleted
 
 		s.watches = append(s.watches, w)
 	}
