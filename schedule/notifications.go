@@ -30,17 +30,38 @@ func createMail(u *feuser, p *watch, s *Schedule) mailing {
 	}
 
 	headerTemplate := mailSection.Key("header").String()
-	bodyTemplate := mailSection.Key("body").String()
-
 	header := headerTemplate
 	header = strings.Replace(header, "%user%", u.username, -1)
 	header = strings.Replace(header, "%pagename%", p.title, -1)
 
+	// Will Replaced by template engine
+	bodyTemplate := mailSection.Key("body").String()
 	body := bodyTemplate
 	body = strings.Replace(body, "%user%", u.username, -1)
 	body = strings.Replace(body, "%pagename%", p.title, -1)
-	//body = strings.Replace(body, "%pagelink%", p.title, -1)
 	body = strings.Replace(body, "\\n", "\n", -1)
+
+	/*templateData := struct {
+		User      string
+		Pagelink  string
+		Pagetitle string
+	}{
+		User:      u.username,
+		Pagelink:  fmt.Sprintf("http://intranet/index.php?id=%d", p.pageID),
+		Pagetitle: p.title,
+	}
+
+	t, tErr := template.ParseFiles(filepath.Join(s.fileadminPath, "scheduler-template.html"))
+	if tErr != nil {
+		log.Fatalf("Error on Template Parsing: %s", tErr.Error())
+	}
+
+	buf := new(bytes.Buffer)
+	if err = t.Execute(buf, templateData); err != nil {
+		log.Fatalf("Error on Template Executing: %s", err.Error())
+	}*/
+
+	//body := buf.String()
 
 	return mailing{
 		email:   u.mail,
@@ -98,6 +119,7 @@ func (s *Schedule) sendMail(p *watch) {
 			msg := []byte("To: " + mailing.email + "\r\n" +
 				"From: " + mailConfig.FromMailName + "<" + mailConfig.FromMailAddress + ">\r\n" +
 				"Subject: " + mailing.subject + "\r\n" +
+				"MIME-version: 1.0;\r\n" +
 				"Content-Type: text/plain; charset=\"utf-8\"\r\n" +
 				"\r\n" +
 				mailing.body + "\r\n")
