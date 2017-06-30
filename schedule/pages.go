@@ -78,7 +78,7 @@ func (s *Schedule) getPage(uid int) pageResults {
 func (s *Schedule) getContent(page *pageResults) {
 	s.databaseOperation(func(d *sql.DB) interface{} {
 
-		rows, err := d.Query("select uid, tstamp, crdate, bodytext from tt_content where pid = ? and hidden = 0 and deleted = 0", page.uid)
+		rows, err := d.Query("select uid, tstamp, crdate from tt_content where pid = ? and hidden = 0 and deleted = 0", page.uid)
 		if err != nil {
 			panic(err.Error())
 		}
@@ -86,8 +86,9 @@ func (s *Schedule) getContent(page *pageResults) {
 		for rows.Next() {
 
 			content := pageContent{}
-			if err := rows.Scan(&content.uid, &content.tstamp, &content.crdate, &content.bodytext); err != nil {
-				log.Fatal(err)
+			if err := rows.Scan(&content.uid, &content.tstamp, &content.crdate); err != nil {
+				log.Printf("error on scan getContent: %s", err.Error())
+				continue
 			}
 
 			content.datetime = time.Unix(content.tstamp, 0)
