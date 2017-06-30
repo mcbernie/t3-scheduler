@@ -1,11 +1,11 @@
 # t3-scheduler
 In „Dateiliste“ liegt dann in Zukunft eine Datei namens scheduler.txt
 Die Datei sieht ungefähr aus:
-[wacht]
+[watch]
 pages=132,33,6,8,10
 
 [receivers]
-132=nico.brüggemann,katrin.uhrbrock
+132=nils.meier,max.mustermann
 33=nico.brüggemann
 ...
 
